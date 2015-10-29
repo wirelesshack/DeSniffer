@@ -33,7 +33,7 @@ class STA:
         self.data_count = 1
 
 class hoppingThread(Thread):
-    SLEEP_TIME = 0.5
+    SLEEP_TIME = 0.3
     def __init__(self, scanner):
         Thread.__init__(self)
         self.scanner = scanner
@@ -71,7 +71,10 @@ class SniffingThread(Thread):
                 if p.ID == 0:
                     ssid = p.info
                 elif p.ID == 3:
-                    channel = ord(p.info)
+                    try:
+                        channel = ord(p.info)
+                    except:
+                        return
                 elif p.ID == 48 and crypto == '':
                     crypto = 'WPA2'
                 elif p.ID == 221 and p.info.startswith('\x00P\xf2\x01\x01\x00') and crypto == '':

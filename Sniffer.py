@@ -22,7 +22,7 @@ class WPASession:
         self.deauth_count += 1 
     
     def reset_count(self):
-        self.deauth_count  = 0
+        self.deauth_count  = -10
         
     def activate(self):
         if not self.is_active and self.ANonce != '' and self.SNonce != '':
@@ -269,7 +269,7 @@ class SniffingThread(Thread):
                 return session
             elif self.sniffer.deauth:
                 session.add_count()
-                if session.deauth_count > 15:
+                if session.deauth_count > 10:
                     #deauth
                     session.reset_count()
                     self.__send_deauth(sta_mac, self.ap_mac)

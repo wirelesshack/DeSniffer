@@ -409,8 +409,6 @@ class Interface_Dialog(object):
         sizePolicy.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
         self.listWidget.setSizePolicy(sizePolicy)
         self.listWidget.setObjectName(_fromUtf8("listWidget"))
-        item = QtGui.QListWidgetItem()
-        self.listWidget.addItem(item)
         self.horizontalLayout.addWidget(self.listWidget)
         self.buttonBox = QtGui.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Vertical)
@@ -431,7 +429,8 @@ class Interface_Dialog(object):
         
         interface_list = self.__search_Interface()
         for i in range(len(interface_list)):
-            item = self.listWidget.item(i)
+            item = QtGui.QListWidgetItem()
+            self.listWidget.addItem(item)
             item.setText(_translate("Dialog", interface_list[i], None))
         self.listWidget.setSortingEnabled(__sortingEnabled)
 
