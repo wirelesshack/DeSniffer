@@ -217,8 +217,8 @@ class Decrypter:
         return LLC(dec_data)
 
 
-    def unwpa2(self, wep_pkt, tk_key,  sta_mac):
-        sta_mac = a2b_hex(sta_mac.replace(':', ''))
+    def unwpa2(self, wep_pkt, tk_key,  TA):
+        TA = a2b_hex(TA.replace(':', ''))
         PN = wep_pkt.wepdata[:4][::-1]
         PN += wep_pkt.iv[:2][::-1]
         Flag = '\x01'
@@ -230,12 +230,13 @@ class Decrypter:
         block_len = len(enc_data)/16 + (0 if len(enc_data)%16 == 0 else 1)
         
         for i in range(block_len):
-          counter = Flag+Priority+sta_mac+PN+struct.pack('>h', i+1)
+          counter = Flag+Priority+TA+PN+struct.pack('>h', i+1)
           cipher = AES.AESCipher(tk_key, AES.MODE_ECB)
           ciphertext = cipher.encrypt(counter)
           
           for j, echar in enumerate(enc_data[16*i:16*(i+1)]):
             dec_data += chr(ord(echar)^ord(ciphertext[j]))
+
         return LLC(dec_data)
     
 class SniffingThread(Thread):
@@ -331,15 +332,15 @@ class SniffingThread(Thread):
                                 session = self.__get_active_session(sta_mac)
                                 if not session:
                                     return
-                                    
+                                
+                                #toDS, fromDS
+                                TA = sta_mac if (pkt.FCfield & 0x1) else self.ap_mac
                                 #WPA/TKIP
                                 if self.sniffer.enc == 2:
-                                    #toDS, fromDS
-                                    TA = sta_mac if (pkt.FCfield & 0x1) else self.ap_mac
                                     de_pkt = self.decrpyter.unwpa(wep_pkt,  session.tk_key,  TA)
                                 #WPA2/CCMP
                                 elif self.sniffer.enc == 3:
-                                    de_pkt = self.decrpyter.unwpa2(wep_pkt,  session.tk_key,  self.ap_mac)
+                                    de_pkt = self.decrpyter.unwpa2(wep_pkt,  session.tk_key,  TA)
                                     
                         #send packet
                         if de_pkt.haslayer(SNAP):
@@ -393,8 +394,9 @@ class Sniffer:
             return 'Invalid SSID'
         if self.enc in [1, 2, 3] and self.key == '':
             return 'Invalid KEY'
-        if self.enc == 1 and len(self.key) not in [5,  13]:
-            return 'Invalid WEP KEY'
+        if self.enc == 1:
+            if len(self.key) not in ([10,  26] if self.hex else [5,  13] ):
+                return 'Invalid WEP KEY'            
         elif self.bssid.count('-') != 5  and self.bssid.count(':') != 5:
             return 'Invalid BSSID'
         elif self.sta_mac != '' and self.sta_mac.count('-') != 5  and self.sta_mac.count(':') != 5:
@@ -411,8 +413,11 @@ class Sniffer:
         if self.sta_mac != '':
             self.ui.textEdit_log.append('[*] STA Filter : %s' % self.sta_mac)
         if self.deauth:
-            self.ui.textEdit_log.append('[*] Auto Deauthentication')
-            conf.iface = self.wlan.interface
+            if self.enc not in [2,  3]:
+                self.deauth = False
+            else:
+                self.ui.textEdit_log.append('[*] Auto Deauthentication')
+                conf.iface = self.wlan.interface
         self.ui.textEdit_log.append('')
         
         if self.hex:
