@@ -369,7 +369,6 @@ class Ui_MainWindow(object):
         self.treeWidget.headerItem().setText(3, _translate("MainWindow", "ENC", None))
         self.treeWidget.headerItem().setText(4, _translate("MainWindow", "DATAs", None))
         self.treeWidget.headerItem().setText(5, _translate("MainWindow", "BSSID", None))
-        __sortingEnabled = self.treeWidget.isSortingEnabled()
  
         self.pushButton_scan_start.setText(_translate("MainWindow", "start", None))
         self.pushButton_scan_stop.setText(_translate("MainWindow", "stop", None))
@@ -424,15 +423,13 @@ class Interface_Dialog(object):
         
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(_translate("Dialog", "Interfaces", None))
-        __sortingEnabled = self.listWidget.isSortingEnabled()
         self.listWidget.setSortingEnabled(False)
-        
         interface_list = self.__search_Interface()
         for i in range(len(interface_list)):
             item = QtGui.QListWidgetItem()
             self.listWidget.addItem(item)
             item.setText(_translate("Dialog", interface_list[i], None))
-        self.listWidget.setSortingEnabled(__sortingEnabled)
+        self.listWidget.setSortingEnabled(True)
 
     def __setInterface(self):
         self.interface = self.listWidget.currentItem().text()
@@ -514,6 +511,7 @@ class MainProc:
             return
         self.wlan.set_interface(interface)
         
+        self.ui.treeWidget.setSortingEnabled(False)
         self.ui.statusBar.showMessage(_fromUtf8('scanning ...'))
         self.is_scanning = True
         self.wlan.start_monitor()
@@ -524,7 +522,7 @@ class MainProc:
             self.is_scanning = False
             self.scanner.stop()
             self.ui.statusBar.showMessage(_fromUtf8('stopped'))
-            
+        
     def start_sniff(self):
         if self.__thread_check():
             return

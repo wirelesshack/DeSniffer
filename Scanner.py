@@ -45,6 +45,7 @@ class hoppingThread(Thread):
             self.scanner.channel_hopping()
 
             if self.__exit:
+                self.scanner.ui.treeWidget.setSortingEnabled(True)
                 break
 
     def exit(self):
